@@ -7,19 +7,28 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: Date | string, fmt = 'dd MMMM yyyy') {
-  const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, fmt, { locale: id })
+export function toZonedDate(date: Date | string, timeZone = 'Asia/Jakarta'): Date {
+  const d = typeof date === 'string' ? (date.includes('T') ? parseISO(date) : new Date(date)) : date
+  if (isNaN(d.getTime())) return d
+  return new Date(d.toLocaleString('en-US', { timeZone }))
 }
 
-export function formatDateTime(date: Date | string) {
-  const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, 'dd MMM yyyy, HH:mm', { locale: id })
+export function formatDate(date: Date | string, fmt = 'dd MMMM yyyy', timeZone = 'Asia/Jakarta') {
+  const zoned = toZonedDate(date, timeZone)
+  if (isNaN(zoned.getTime())) return ''
+  return format(zoned, fmt, { locale: id })
 }
 
-export function formatTime(date: Date | string) {
-  const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, 'HH:mm', { locale: id })
+export function formatDateTime(date: Date | string, timeZone = 'Asia/Jakarta') {
+  const zoned = toZonedDate(date, timeZone)
+  if (isNaN(zoned.getTime())) return ''
+  return format(zoned, 'dd MMM yyyy, HH:mm', { locale: id })
+}
+
+export function formatTime(date: Date | string, timeZone = 'Asia/Jakarta') {
+  const zoned = toZonedDate(date, timeZone)
+  if (isNaN(zoned.getTime())) return ''
+  return format(zoned, 'HH:mm', { locale: id })
 }
 
 export function timeAgo(date: Date | string) {

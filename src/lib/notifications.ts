@@ -178,7 +178,7 @@ export async function notifyActionItemAssigned(actionItemId: string) {
     bookingId: item.meeting.bookingId,
     type: 'ACTION_ITEM_ASSIGNED',
     title: 'Tindak Lanjut Baru Ditugaskan 📋',
-    body: `Anda ditugaskan tindak lanjut: "${item.description}" dari rapat "${item.meeting.booking.title}". Deadline: ${new Date(item.deadline).toLocaleDateString('id-ID')}.`,
+    body: `Anda ditugaskan tindak lanjut: "${item.description}" dari rapat "${item.meeting.booking.title}". Deadline: ${new Date(item.deadline).toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta' })}.`,
     link: `/action-items`,
     sendEmail: true,
     emailSubject: `[MMS] Tindak Lanjut Baru: ${item.description}`,
@@ -189,7 +189,7 @@ export async function notifyActionItemAssigned(actionItemId: string) {
         <p>Anda telah ditugaskan untuk menindaklanjuti hasil rapat <strong>${item.meeting.booking.title}</strong>.</p>
         <table style="border-collapse:collapse;width:100%;margin:16px 0">
           <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold">Tugas</td><td style="padding:8px;border:1px solid #eee">${item.description}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold">Batas Waktu (Deadline)</td><td style="padding:8px;border:1px solid #eee">${new Date(item.deadline).toLocaleDateString('id-ID', { dateStyle: 'full' })}</td></tr>
+          <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold">Batas Waktu (Deadline)</td><td style="padding:8px;border:1px solid #eee">${new Date(item.deadline).toLocaleDateString('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' })}</td></tr>
         </table>
       `,
       cta: { label: 'Buka Tindak Lanjut', url: `${APP_URL}/action-items` },
