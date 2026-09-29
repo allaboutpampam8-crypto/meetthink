@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { Loader2, X, Plus, AlertTriangle, CheckCircle2, Calendar as CalendarIcon, Info } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { RoomDayTimeline } from '@/components/booking/room-day-timeline'
+import { formatTime } from '@/lib/utils'
 
 const schema = z.object({
   title: z.string().min(1, 'Judul wajib diisi'),
@@ -115,6 +116,48 @@ function BookingFormContent({ rooms, users, currentUserId, onOpenCalendar }: Pro
     },
     enabled: Boolean(roomId && startAt && endAt && startTime < endTime),
   })
+
+  // Participant conflict check query
+  const participantUserIds = participants.map((p) => p.userId).filter(Boolean) as string[]
+  const participantEmails = participants.map((p) => p.email).filter(Boolean) as string[]
+
+  const { data: participantConflictsData } = useQuery({
+    queryKey: ['participant-conflicts', startAt, endAt, participantUserIds, participantEmails],
+    queryFn: async () => {
+      if (!startAt || !endAt || (participantUserIds.length === 0 && participantEmails.length === 0)) {
+        return { conflicts: [] }
+      }
+      const res = await fetch('/api/participants/availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startAt: new Date(startAt).toISOString(),
+          endAt: new Date(endAt).toISOString(),
+          userIds: participantUserIds,
+          emails: participantEmails,
+        }),
+      })
+      if (!res.ok) return { conflicts: [] }
+      return res.json() as Promise<{
+        conflicts: Array<{
+          userId?: string
+          email: string
+          name: string
+          conflictingBooking: {
+            id: string
+            title: string
+            startAt: string
+            endAt: string
+            roomName: string
+            status: string
+          }
+        }>
+      }>
+    },
+    enabled: Boolean(startAt && endAt && startTime < endTime && (participantUserIds.length > 0 || participantEmails.length > 0)),
+  })
+
+  const participantConflicts = participantConflictsData?.conflicts || []
 
   const selectedRoom = rooms.find((r) => r.id === roomId)
 
@@ -390,16 +433,59 @@ function BookingFormContent({ rooms, users, currentUserId, onOpenCalendar }: Pro
 
         {participants.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
-            {participants.map((p) => (
-              <div key={p.userId ?? p.email}
-                className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm">
-                <span>{p.name}</span>
-                <button type="button" onClick={() => removeParticipant(p.userId, p.email)}
-                  className="hover:text-blue-900">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
+            {participants.map((p) => {
+              const conflict = participantConflicts.find(
+                (c) => (p.userId && c.userId === p.userId) || c.email === p.email,
+              )
+              return (
+                <div
+                  key={p.userId ?? p.email}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                    conflict
+                      ? 'bg-amber-50 text-amber-900 border border-amber-300'
+                      : 'bg-blue-50 text-blue-700'
+                  }`}
+                >
+                  <span className="font-medium">{p.name}</span>
+                  {conflict && (
+                    <span
+                      title={`Bentrok dengan "${conflict.conflictingBooking.title}" (${formatTime(conflict.conflictingBooking.startAt)} - ${formatTime(conflict.conflictingBooking.endAt)}, ${conflict.conflictingBooking.roomName})`}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-200/90 text-amber-900 px-2 py-0.5 rounded-full cursor-help"
+                    >
+                      <AlertTriangle className="w-3 h-3 text-amber-700 flex-shrink-0" />
+                      Bentrok Jadwal
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeParticipant(p.userId, p.email)}
+                    className="hover:opacity-75 ml-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Soft Warning Box if any participants have conflicts */}
+        {participantConflicts.length > 0 && (
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1.5">
+            <div className="flex items-center gap-2 font-semibold text-amber-800">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>Perhatian: Terdapat {participantConflicts.length} peserta yang memiliki jadwal rapat lain di jam ini:</span>
+            </div>
+            <ul className="list-disc pl-5 space-y-1 text-amber-800/90">
+              {participantConflicts.map((c, i) => (
+                <li key={i}>
+                  <strong>{c.name}</strong>: Terjadwal di &ldquo;{c.conflictingBooking.title}&rdquo; ({formatTime(c.conflictingBooking.startAt)} - {formatTime(c.conflictingBooking.endAt)}, {c.conflictingBooking.roomName}).
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-amber-700 italic pt-0.5">
+              💡 Catatan: Anda tetap dapat melanjutkan pengajuan booking jika rapat ini mendesak atau kehadiran peserta bersifat tentatif/opsional.
+            </p>
           </div>
         )}
 
