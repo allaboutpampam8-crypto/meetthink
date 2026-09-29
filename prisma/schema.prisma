@@ -1,0 +1,384 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUM
+// ─────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  APPROVER
+  USER
+}
+
+enum BookingStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum ApprovalActionType {
+  APPROVE
+  REJECT
+  REVISE
+}
+
+enum ParticipantType {
+  REQUIRED
+  OPTIONAL
+}
+
+enum ParticipantRsvp {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum ActionItemStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  OVERDUE
+}
+
+enum NotificationType {
+  BOOKING_SUBMITTED
+  BOOKING_APPROVED
+  BOOKING_REJECTED
+  BOOKING_CANCELLED
+  BOOKING_REVISED
+  BOOKING_REMINDER_1DAY
+  BOOKING_REMINDER_1HOUR
+  APPROVAL_REQUEST
+  APPROVAL_DEADLINE
+  ACTION_ITEM_ASSIGNED
+  ACTION_ITEM_REMINDER
+  ACTION_ITEM_OVERDUE
+  MEETING_NOTE_PUBLISHED
+}
+
+// ─────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  password       String
+  role           Role     @default(USER)
+  division       String?
+  position       String?
+  phone          String?
+  avatarUrl      String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Notification preferences
+  notifEmail     Boolean  @default(true)
+  notifInApp     Boolean  @default(true)
+  notifPush      Boolean  @default(true)
+
+  // Relations
+  bookings           Booking[]              @relation("BookingRequester")
+  participations     BookingParticipant[]
+  approvalActions    ApprovalAction[]
+  actionItems        ActionItem[]           @relation("ActionItemPIC")
+  notifications      Notification[]
+  pushSubscriptions  PushSubscription[]
+  auditLogs          AuditLog[]
+  approvalSteps      ApprovalStep[]         @relation("StepApprover")
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// ROOM
+// ─────────────────────────────────────────────
+
+model Room {
+  id            String    @id @default(cuid())
+  name          String
+  code          String    @unique
+  location      String    // Gedung/Lantai/Nomor
+  floor         String?
+  capacity      Int
+  description   String?
+  imageUrl      String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Jam operasional (JSON: { mon: ["08:00","17:00"], tue: [...], ... })
+  operationalHours Json?
+
+  // Relations
+  facilities      RoomFacility[]
+  bookings        Booking[]
+  blockedPeriods  RoomBlockedPeriod[]
+
+  @@map("rooms")
+}
+
+model RoomFacility {
+  id     String @id @default(cuid())
+  roomId String
+  name   String // "Proyektor", "AC", "Video Conference", "Whiteboard", dll.
+
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("room_facilities")
+}
+
+model RoomBlockedPeriod {
+  id        String   @id @default(cuid())
+  roomId    String
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("room_blocked_periods")
+}
+
+// ─────────────────────────────────────────────
+// APPROVAL FLOW
+// ─────────────────────────────────────────────
+
+model ApprovalFlow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  division    String?  // Divisi target (misal: "IT", "Marketing", dll. Null = Alur Umum / Default)
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  steps    ApprovalStep[]
+  bookings Booking[]
+
+  @@map("approval_flows")
+}
+
+model ApprovalStep {
+  id             String   @id @default(cuid())
+  approvalFlowId String
+  level          Int      // 1, 2, 3, ...
+  label          String   // "Kepala Divisi", "Admin Fasilitas", dll.
+  approverId     String   // User yang bertindak sebagai approver di level ini
+  deadlineHours  Int      @default(24) // jam sebelum eskalasi
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  approvalFlow ApprovalFlow     @relation(fields: [approvalFlowId], references: [id], onDelete: Cascade)
+  approver     User             @relation("StepApprover", fields: [approverId], references: [id])
+  actions      ApprovalAction[]
+
+  @@unique([approvalFlowId, level])
+  @@map("approval_steps")
+}
+
+// ─────────────────────────────────────────────
+// BOOKING
+// ─────────────────────────────────────────────
+
+model Booking {
+  id              String        @id @default(cuid())
+  title           String
+  agenda          String?       // Rich text / markdown
+  requesterId     String
+  roomId          String
+  startAt         DateTime
+  endAt           DateTime
+  status          BookingStatus @default(PENDING)
+  approvalFlowId  String?
+  currentLevel    Int           @default(1)  // Level approval yang sedang berjalan
+  notes           String?       // Catatan tambahan untuk approver
+  rejectedReason  String?
+  cancelledAt     DateTime?
+  cancelledReason String?
+  attendanceToken String?       @unique // Token unik untuk scan barcode absensi
+  requesterAttendedAt DateTime? // Waktu absensi penyelenggara
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  requester    User                @relation("BookingRequester", fields: [requesterId], references: [id])
+  room         Room                @relation(fields: [roomId], references: [id])
+  approvalFlow ApprovalFlow?       @relation(fields: [approvalFlowId], references: [id])
+  participants BookingParticipant[]
+  documents    BookingDocument[]
+  actions      ApprovalAction[]
+  meeting      Meeting?
+  notifications Notification[]
+
+  @@map("bookings")
+}
+
+model BookingParticipant {
+  id             String          @id @default(cuid())
+  bookingId      String
+  userId         String?
+  email          String          // support external guest
+  name           String?
+  type           ParticipantType @default(REQUIRED)
+  rsvp           ParticipantRsvp @default(PENDING)
+  rsvpAt         DateTime?
+  attendedAt     DateTime?       // Waktu absensi peserta
+  checkInMethod  String?         // "QR_SCAN" | "MANUAL"
+
+  booking    Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user       User?   @relation(fields: [userId], references: [id])
+
+  @@unique([bookingId, email])
+  @@map("booking_participants")
+}
+
+model BookingDocument {
+  id         String   @id @default(cuid())
+  bookingId  String
+  name       String
+  url        String
+  size       Int?
+  mimeType   String?
+  uploadedAt DateTime @default(now())
+
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("booking_documents")
+}
+
+// ─────────────────────────────────────────────
+// APPROVAL ACTION (audit trail)
+// ─────────────────────────────────────────────
+
+model ApprovalAction {
+  id             String             @id @default(cuid())
+  bookingId      String
+  approvalStepId String
+  approverId     String
+  action         ApprovalActionType
+  comment        String?
+  createdAt      DateTime           @default(now())
+
+  booking      Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  approvalStep ApprovalStep @relation(fields: [approvalStepId], references: [id])
+  approver     User         @relation(fields: [approverId], references: [id])
+
+  @@map("approval_actions")
+}
+
+// ─────────────────────────────────────────────
+// MEETING (setelah booking approved)
+// ─────────────────────────────────────────────
+
+model Meeting {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  notes     String?  // Notulensi (rich text)
+  isNotesFinalized Boolean @default(false)
+  finalizedAt      DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking     Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  actionItems ActionItem[]
+
+  @@map("meetings")
+}
+
+// ─────────────────────────────────────────────
+// ACTION ITEM
+// ─────────────────────────────────────────────
+
+model ActionItem {
+  id          String           @id @default(cuid())
+  meetingId   String
+  description String
+  picId       String
+  deadline    DateTime
+  status      ActionItemStatus @default(OPEN)
+  completedAt DateTime?
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  pic     User    @relation("ActionItemPIC", fields: [picId], references: [id])
+
+  @@map("action_items")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATION
+// ─────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  bookingId String?
+  type      NotificationType
+  title     String
+  body      String
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  link      String?          // URL untuk redirect saat diklik
+  createdAt DateTime         @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // e.g., "booking.created", "booking.approved"
+  entityType String   // e.g., "Booking", "Room"
+  entityId   String
+  oldData    Json?
+  newData    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
