@@ -38,21 +38,6 @@ export default async function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <LoginForm />
         </div>
-
-        {/* Portfolio Demo Quick Link */}
-        <div className="mt-6 text-center">
-          <a
-            href="/demo"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 hover:bg-white text-xs font-semibold text-slate-700 hover:text-blue-600 border border-slate-200/80 shadow-sm transition-all hover:shadow"
-          >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-            </span>
-            <span>Meninjau untuk portofolio? Coba 1-Click Demo di sini</span>
-            <span className="text-orange-500">→</span>
-          </a>
-        </div>
       </div>
     </div>
   )

@@ -79,10 +79,9 @@ interface SidebarProps {
     role?: string | null
     division?: string | null
   }
-  isDemoMode?: boolean
 }
 
-export function Sidebar({ user, isDemoMode }: SidebarProps) {
+export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
   const role = user.role ?? 'USER'
 
@@ -161,30 +160,6 @@ export function Sidebar({ user, isDemoMode }: SidebarProps) {
           </>
         )}
       </nav>
-
-      {/* Demo Sandbox Indicator Card */}
-      {isDemoMode && (
-        <div className="mx-4 mb-2 p-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/90 text-amber-950 shadow-xs">
-          <div className="flex items-center justify-between gap-1 mb-1">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-              Demo Sandbox
-            </span>
-            <span className="text-[10px] uppercase font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded">
-              Portofolio
-            </span>
-          </div>
-          <p className="text-[11px] text-amber-800 leading-snug">
-            Data bersifat simulasi untuk peninjauan fitur.
-          </p>
-          <Link
-            href="/demo"
-            className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 hover:underline"
-          >
-            Pusat Demo & Ganti Akun →
-          </Link>
-        </div>
-      )}
 
       {/* User info */}
       <div className="px-4 py-4 border-t border-gray-100">
