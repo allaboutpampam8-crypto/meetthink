@@ -13,17 +13,26 @@ interface NavbarProps {
     email?: string | null
     role?: string | null
   }
+  isDemoMode?: boolean
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({ user, isDemoMode }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   return (
     <>
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between">
-        {/* Page title placeholder — filled by each page */}
-        <div id="page-title" />
+        {/* Page title placeholder & demo badge */}
+        <div className="flex items-center gap-3">
+          <div id="page-title" />
+          {isDemoMode && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+              DEMO SANDBOX
+            </span>
+          )}
+        </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-3">
@@ -69,6 +78,15 @@ export function Navbar({ user }: NavbarProps) {
                     <KeyRound className="w-4 h-4 text-orange-500" />
                     <span>Ganti Password</span>
                   </button>
+
+                  {isDemoMode && (
+                    <a
+                      href="/demo"
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-amber-700 bg-amber-50/70 hover:bg-amber-100/70 transition-colors border-b border-gray-100 font-medium"
+                    >
+                      <span>🧪 Pusat Demo Portofolio</span>
+                    </a>
+                  )}
 
                   <button
                     onClick={() => signOut({ callbackUrl: '/login' })}

@@ -116,6 +116,9 @@ export function DemoLoginCards({ currentSessionUser }: { currentSessionUser?: an
         return
       }
 
+      // Aktifkan mode demo melalui cookie agar aplikasi menampilkan banner & indikator demo
+      document.cookie = 'meetthink_demo_mode=true; path=/; max-age=86400; SameSite=Lax'
+
       toast.success(`Berhasil masuk sebagai ${account.role}! Mengalihkan ke dashboard...`)
       router.push('/dashboard')
       router.refresh()
