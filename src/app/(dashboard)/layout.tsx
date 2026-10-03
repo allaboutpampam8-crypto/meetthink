@@ -12,14 +12,14 @@ export default async function DashboardLayout({
   if (!session) redirect('/login')
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
       <Sidebar user={session.user} />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar user={session.user} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>
