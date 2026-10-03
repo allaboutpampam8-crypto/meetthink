@@ -3,9 +3,9 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
-import { Plus, Building2, Users, Settings, Edit } from 'lucide-react'
+import { Plus, Building2, Users, Settings, Edit, MapPin } from 'lucide-react'
 
-export const metadata: Metadata = { title: 'Manajemen Ruang' }
+export const metadata: Metadata = { title: 'Manajemen Ruang | MeetThink' }
 
 export default async function AdminRoomsPage() {
   const session = await auth()
@@ -58,9 +58,12 @@ export default async function AdminRoomsPage() {
             </div>
 
             <div className="mt-4 space-y-1.5">
-              <p className="text-sm text-gray-600">📍 {room.location}</p>
-              <div className="flex items-center gap-3 text-sm text-gray-500">
-                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {room.capacity} orang</span>
+              <p className="text-sm text-slate-600 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <span>{room.location}</span>
+              </p>
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-slate-400" /> {room.capacity} orang</span>
                 <span>· {room._count.bookings} booking</span>
               </div>
             </div>

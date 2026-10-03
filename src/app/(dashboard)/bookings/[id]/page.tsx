@@ -16,6 +16,7 @@ import {
   Coffee,
   Building2,
   Info,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { formatDateTime, formatTime, bookingStatusColor, bookingStatusLabel, getMeetingLifecycle } from '@/lib/utils'
 import { ApprovalActionForm } from '@/components/approval/approval-action-form'
@@ -263,8 +264,8 @@ export default async function BookingDetailPage({
         <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-5 shadow-xs space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center text-lg">
-                🍱
+              <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200/90 flex items-center justify-center text-amber-700 shadow-2xs">
+                <UtensilsCrossed className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-amber-950">
@@ -402,17 +403,33 @@ export default async function BookingDetailPage({
                       <span className="ml-2 font-normal text-gray-500">({step.approver.name})</span>
                     </p>
                     {action && (
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {action.action === 'APPROVE'
-                          ? '✅ Disetujui'
-                          : action.action === 'REJECT'
-                          ? '❌ Ditolak'
-                          : '🔄 Revisi'}
-                        {action.comment && ` — "${action.comment}"`}
+                      <p className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold border ${
+                            action.action === 'APPROVE'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : action.action === 'REJECT'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}
+                        >
+                          {action.action === 'APPROVE' ? (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          ) : action.action === 'REJECT' ? (
+                            <XCircle className="w-3 h-3 text-rose-600" />
+                          ) : (
+                            <RotateCcw className="w-3 h-3 text-amber-600" />
+                          )}
+                          <span>{action.action === 'APPROVE' ? 'Disetujui' : action.action === 'REJECT' ? 'Ditolak' : 'Revisi'}</span>
+                        </span>
+                        {action.comment && <span className="text-slate-600 italic">— &ldquo;{action.comment}&rdquo;</span>}
                       </p>
                     )}
                     {isCurrent && !action && (
-                      <p className="text-xs text-yellow-600 font-medium mt-0.5">⏳ Menunggu persetujuan</p>
+                      <p className="text-xs text-amber-600 font-medium mt-1 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 animate-pulse" />
+                        <span>Menunggu persetujuan</span>
+                      </p>
                     )}
                   </div>
                 </div>

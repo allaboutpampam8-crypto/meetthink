@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2, X, Plus, AlertTriangle, CheckCircle2, Calendar as CalendarIcon, Info } from 'lucide-react'
+import { Loader2, X, Plus, AlertTriangle, CheckCircle2, Calendar as CalendarIcon, Info, MapPin } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { RoomDayTimeline } from '@/components/booking/room-day-timeline'
 import { formatTime } from '@/lib/utils'
@@ -313,8 +313,9 @@ function BookingFormContent({ rooms, users, currentUserId, onOpenCalendar }: Pro
           {selectedRoom && (
             <div className="mt-2.5 p-3 bg-blue-50/70 border border-blue-100 rounded-lg text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <p className="text-blue-900 font-medium text-xs">
-                  📍 {selectedRoom.location} · Kapasitas: {selectedRoom.capacity} orang
+                <p className="text-blue-900 font-medium text-xs flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                  <span>{selectedRoom.location} · Kapasitas: {selectedRoom.capacity} orang</span>
                 </p>
                 {selectedRoom.facilities.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1.5">

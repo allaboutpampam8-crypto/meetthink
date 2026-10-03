@@ -1,10 +1,13 @@
 import { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { ClipboardList, CheckCircle2, Clock, AlertTriangle } from 'lucide-react'
+import { ClipboardList, CheckCircle2, Clock, AlertTriangle, Sparkles, CheckSquare2 } from 'lucide-react'
 import { ActionItemList } from '@/components/action-items/action-item-list'
 
-export const metadata: Metadata = { title: 'Tindak Lanjut' }
+export const metadata: Metadata = {
+  title: 'Tindak Lanjut & Action Items | MeetThink',
+  description: 'Daftar tugas, tenggat waktu, dan komitmen hasil rapat yang ditugaskan kepada Anda.',
+}
 
 export default async function ActionItemsPage() {
   const session = await auth()
@@ -30,42 +33,66 @@ export default async function ActionItemsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tindak Lanjut Saya</h1>
-        <p className="text-gray-500 mt-1">Action items yang ditugaskan kepada Anda</p>
+    <div className="max-w-5xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="pb-3 border-b border-slate-200/60">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60 mb-1.5">
+          <ClipboardList className="w-3.5 h-3.5 text-purple-500" />
+          <span>Akuntabilitas & Eksekusi Rapat</span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Tindak Lanjut & Action Items
+        </h1>
+        <p className="text-slate-500 mt-1 text-xs sm:text-sm">
+          Pantau komitmen tugas, perbarui status pengerjaan, dan pastikan setiap keputusan rapat tereksekusi tepat waktu
+        </p>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary Stat Cards */}
       {actionItems.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white rounded-xl border border-yellow-100 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-yellow-500" />
-              <span className="text-xs font-medium text-yellow-600">Belum Dikerjakan</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-700">Belum Mulai</span>
+              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{counts.open}</p>
+            <p className="text-3xl font-extrabold text-slate-900">{counts.open}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Menunggu penanganan</p>
           </div>
-          <div className="bg-white rounded-xl border border-blue-100 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span className="text-xs font-medium text-blue-600">Sedang Dikerjakan</span>
+
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-700">Dikerjakan</span>
+              <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Clock className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{counts.inProgress}</p>
+            <p className="text-3xl font-extrabold text-slate-900">{counts.inProgress}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Sedang berjalan</p>
           </div>
-          <div className="bg-white rounded-xl border border-green-100 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              <span className="text-xs font-medium text-green-600">Selesai</span>
+
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700">Selesai</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{counts.done}</p>
+            <p className="text-3xl font-extrabold text-slate-900">{counts.done}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Tuntas dieksekusi</p>
           </div>
-          <div className="bg-white rounded-xl border border-red-100 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-              <span className="text-xs font-medium text-red-600">Terlambat</span>
+
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-700">Terlambat</span>
+              <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{counts.overdue}</p>
+            <p className="text-3xl font-extrabold text-rose-600">{counts.overdue}</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Melewati batas waktu</p>
           </div>
         </div>
       )}

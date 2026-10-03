@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Lock,
   ShieldCheck,
+  AlertCircle,
 } from 'lucide-react'
 
 interface ChangePasswordModalProps {
@@ -122,7 +123,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-start gap-2">
-                  <span className="font-bold flex-shrink-0">⚠️</span>
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}

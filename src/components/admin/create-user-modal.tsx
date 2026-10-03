@@ -14,6 +14,7 @@ import {
   Mail,
   User,
   Lock,
+  AlertCircle,
 } from 'lucide-react'
 import { roleLabel } from '@/lib/utils'
 
@@ -157,7 +158,7 @@ export function CreateUserModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-start gap-2">
-              <span className="font-bold flex-shrink-0">⚠️</span>
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
